@@ -1,0 +1,71 @@
+<!doctype html><html lang='vi'><meta charset='utf-8'><title>06_maintenance</title><style>body{font:16px 'Segoe UI',sans-serif;max-width:1200px;margin:24px auto;color:#172b4d}h1{font-size:25px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px Consolas,monospace;background:#f4f7fb;padding:16px;border-left:4px solid #2472a4}small{color:#465872}</style><h1>06_maintenance — bằng chứng thực thi</h1><p>Nguyễn Bá Chính · 2A202602654 · 2026-10-04T16:12:29+07:00</p><small>Ảnh chụp trang render output từ notebook đã thực thi; xem toàn bộ cell/output trong .ipynb.</small><pre>AFTER compaction         files=  11  data=  16.1 MB  log= 434.4 KB (201 json)  rows=100,000
+
+filesAdded=11  filesRemoved=200
+File reduction: 200 → 11 (18× fewer)
+Note: data bytes went UP slightly — compaction WRITES new files before
+the old ones are reclaimed. You pay twice, briefly. Budget for it.
+</pre><pre>Point query user_id=12345
+  before clustering: must open 11/11 files
+  after  clustering: must open 1/10 files
+  → skip rate: 90% of files never touched
+
+Unclustered data has overlapping min/max ranges, so stats prove nothing
+and the engine must read everything. Clustering is what makes stats USEFUL.
+</pre><pre>AFTER vacuum             files=  10  data=   6.2 MB  log= 445.1 KB (204 json)  rows=100,000
+
+Reclaimed: 16.1 MB
+Time travel to v0 is now GONE — that is the trade you just made.
+</pre><pre>Orphans found: 3  (21.2 KB)
+  part-99990-crashed-writer-c000.snappy.parquet
+  part-99991-crashed-writer-c000.snappy.parquet
+  part-99992-crashed-writer-c000.snappy.parquet
+
+After removal — data files on disk: 10, in log: 10
+
+⚠️ The age guard is not optional. Without it you will delete files that a
+   concurrent writer has written but not yet committed, and corrupt the table.
+</pre><pre>JSON log entries a cold reader would replay: 204
+Checkpoint written: 00000000000000000203.checkpoint.parquet
+Latest checkpoint metadata: {&#x27;version&#x27;: 203, &#x27;size&#x27;: 223, &#x27;sizeInBytes&#x27;: 36321, &#x27;numOfAddFiles&#x27;: 10}
+_last_checkpoint present: True
+
+A reader now loads 1 checkpoint + the few JSONs after it, not all 200.
+For CDC/streaming tables this is the difference between a 200 ms and a
+20 s cold start — and it is why the slide calls it the 5th job.
+</pre><pre>snapshots: 20 → 3  (17 expired)
+avro files on disk: 40 → 40  (deleted: 0)
+metadata bytes: 332.4 KB → 339.9 KB
+
+Expiry alone reclaimed NOTHING. Now find what it stranded:
+</pre><pre>Stranded manifest lists: 17  (36.7 KB)
+  snap-1205995660379840557-0-5e0ec0df-64e2-418b-b956-0784781ccba9.avro
+  snap-179580262590289321-0-f7411366-5181-4520-a6df-c8c85c22c0f7.avro
+  snap-2125739859830726042-0-ef6ef863-7b12-4ef6-ac3b-cf22c695d7e5.avro
+  ... and 14 more
+after sweep    snapshots=  3  avro= 23  json= 22  metadata=303.2 KB
+
+Reclaimed by chaining expiry → orphan removal: 36.7 KB
+</pre><pre>Measured metrics (live kernel):
+{
+  &quot;files_before&quot;: 200,
+  &quot;files_after_compact&quot;: 11,
+  &quot;compaction_ratio&quot;: 18.181818181818183,
+  &quot;clustered_files&quot;: 10,
+  &quot;files_touched&quot;: 1,
+  &quot;skip_rate&quot;: 0.9,
+  &quot;vacuum_bytes_reclaimed&quot;: 16906688,
+  &quot;delta_orphans_removed&quot;: 3,
+  &quot;delta_orphan_bytes&quot;: 21702,
+  &quot;iceberg_snapshots_before&quot;: 20,
+  &quot;iceberg_snapshots_after&quot;: 3,
+  &quot;iceberg_avro_before&quot;: 40,
+  &quot;iceberg_avro_after_expiry&quot;: 40,
+  &quot;stranded_lists_removed&quot;: 17,
+  &quot;iceberg_bytes_reclaimed&quot;: 37610,
+  &quot;checkpoint&quot;: &quot;00000000000000000203.checkpoint.parquet&quot;,
+  &quot;checkpoint_version&quot;: 203,
+  &quot;data_files_on_disk&quot;: 10,
+  &quot;last_checkpoint&quot;: true,
+  &quot;delta_rows&quot;: 100000,
+  &quot;iceberg_rows&quot;: 2000
+}</pre></html>

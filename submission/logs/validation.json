@@ -1,0 +1,47 @@
+{
+  "executed_at": "2026-10-04T16:09:05+07:00",
+  "checks": {
+    "smoke": {
+      "command": [
+        "D:\\K4-Track02-Day18-NguyenBaChinh-2A202602654-Lakehouse-Lab\\.venv\\Scripts\\python.exe",
+        "scripts/verify_lite.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.007512499999393
+    },
+    "generate_data": {
+      "command": [
+        "D:\\K4-Track02-Day18-NguyenBaChinh-2A202602654-Lakehouse-Lab\\.venv\\Scripts\\python.exe",
+        "scripts/generate_data_lite.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.3671495999997205
+    },
+    "generate_ai_data": {
+      "command": [
+        "D:\\K4-Track02-Day18-NguyenBaChinh-2A202602654-Lakehouse-Lab\\.venv\\Scripts\\python.exe",
+        "scripts/generate_ai_data.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.49327699999957986
+    },
+    "pytest": {
+      "command": [
+        "D:\\K4-Track02-Day18-NguyenBaChinh-2A202602654-Lakehouse-Lab\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.575837200000024
+    },
+    "run_all": {
+      "command": [
+        "D:\\K4-Track02-Day18-NguyenBaChinh-2A202602654-Lakehouse-Lab\\.venv\\Scripts\\python.exe",
+        "scripts/run_all.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 59.61952949999977,
+      "executed_at": "2026-10-04T16:12:25+07:00"
+    }
+  }
+}

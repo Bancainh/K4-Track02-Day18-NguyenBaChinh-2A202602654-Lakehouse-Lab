@@ -57,6 +57,10 @@ reset(SILVER)
 # autoloads an extension over the network; Arrow registration is offline and
 # zero-copy, so the lab works on a locked-down machine.
 con = duckdb.connect()
+# The generator spans seven UTC days. Casting TIMESTAMPTZ to DATE otherwise
+# uses the machine timezone and can split that interval into eight local dates.
+con.execute("SET TimeZone='UTC'")
+print("Aggregation timezone:", con.sql("SELECT current_setting('TimeZone')").fetchone()[0])
 con.register("bronze", DeltaTable(BRONZE).to_pyarrow_table())
 
 silver_arrow = con.sql(f"""
@@ -134,6 +138,10 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 # %%
 gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
 print(gold_df)
+print("Gold full result (date/model/latency/cost/error):")
+print(gold_df.sort(["date", "model"]).select(
+    "date", "model", "p50_latency_ms", "p95_latency_ms", "cost_usd", "error_rate"
+).write_csv())
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -148,6 +156,21 @@ assert n_dates >= 7, (
     f"Gold has only {n_dates} dates — slide deliverable requires ≥ 7. "
     "Re-run `make data` (the generator spreads across 7 UTC days)."
 )
+assert n_models == 3, "Gold must cover exactly the three input models"
+assert gold_df.height == n_dates * n_models, "Gold is missing date/model groups"
+assert gold_df.select("date", "model").n_unique() == gold_df.height
+assert gold_df.filter(
+    pl.any_horizontal(pl.col(c).is_null() for c in (
+        "p50_latency_ms", "p95_latency_ms", "cost_usd", "error_rate"
+    ))
+).height == 0, "Gold metrics contain NULLs"
+assert gold_df.filter(pl.col("p50_latency_ms") > pl.col("p95_latency_ms")).height == 0
+assert gold_df.filter(pl.col("cost_usd") <= 0).height == 0
+assert gold_df.filter(~pl.col("error_rate").is_between(0, 1)).height == 0
+assert DeltaTable(SILVER).count() == con.sql("SELECT count(DISTINCT request_id) FROM silver").fetchone()[0]
+assert all(Path(p).joinpath("_delta_log").exists() for p in (BRONZE, SILVER, GOLD))
+print("[PASS] Gold complete date/model grid; non-null p50 <= p95; positive cost; error_rate in [0,1]")
+print("[PASS] Silver request IDs unique; Bronze/Silver/Gold Delta logs present")
 
 # %% [markdown]
 # ## ✅ Deliverable check

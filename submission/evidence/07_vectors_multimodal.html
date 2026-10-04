@@ -1,0 +1,63 @@
+<!doctype html><html lang='vi'><meta charset='utf-8'><title>07_vectors_multimodal</title><style>body{font:16px 'Segoe UI',sans-serif;max-width:1200px;margin:24px auto;color:#172b4d}h1{font-size:25px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px Consolas,monospace;background:#f4f7fb;padding:16px;border-left:4px solid #2472a4}small{color:#465872}</style><h1>07_vectors_multimodal — bằng chứng thực thi</h1><p>Nguyễn Bá Chính · 2A202602654 · 2026-10-04T16:09:07+07:00</p><small>Ảnh chụp trang render output từ notebook đã thực thi; xem toàn bộ cell/output trong .ipynb.</small><pre>inline parquet: 1 row group(s), 200 rows, 12.5 MB per group
+
+Fetching ONE frame (doc_id=137):
+  inline  → must read the row group: 12.5 MB
+  pointer → one GET of the object:   64.0 KB
+  → amplification: 200× more bytes than needed
+
+At 1,000 random frame fetches/sec to feed a GPU, that amplification IS
+the GPU-starvation problem. Formats like Lance restructure the file so a
+random read costs ~one row, not one row group.
+</pre><pre>
+On disk (Parquet, compressed):
+  float32: 2.6 MB
+  int8   : 451.9 KB   →  5.8× smaller
+</pre><pre>Query doc: storage-note-00007  (topic=storage)
+
+ doc_id  topic           sim  title
+      7  storage       1.000  storage-note-00007
+   1703  storage       0.779  storage-note-01703
+   1200  storage       0.777  storage-note-01200
+    766  storage       0.776  storage-note-00766
+   1250  storage       0.768  storage-note-01250
+
+brute-force scan over 2,000 vectors: 21.9 ms
+</pre><pre>recall@10 (exact doc IDs), int8 vs float32: 0.904
+topic fidelity of int8 top-10:              1.000
+storage saved: 83%
+
+→ int8 loses ~10% of exact IDs but 100% of results are still
+  on-topic. The &quot;misses&quot; are swaps between near-equivalent neighbours, which
+  is why exact-ID recall UNDERSTATES quantization quality for RAG.
+  Measure both on YOUR corpus before shipping — the trade is corpus-dependent.
+</pre><pre>Erased docs still retrievable from the lakehouse:      0
+Erased docs still retrievable from the external index: 8   ← VIOLATION
+
+The external index will happily return user_042&#x27;s content to a RAG prompt
+until the next sync — and if the sync is one-way upsert (the common case),
+*forever*, because deletes are the operation sync pipelines forget.
+
+</pre><pre>Measured metrics (live kernel):
+{
+  &quot;amplification&quot;: 200.04983520507812,
+  &quot;row_group_rows&quot;: 200,
+  &quot;row_group_bytes&quot;: 13110466,
+  &quot;one_blob_bytes&quot;: 65536,
+  &quot;f32_bytes&quot;: 2685240,
+  &quot;int8_bytes&quot;: 462727,
+  &quot;quantization_ratio&quot;: 5.803076111832679,
+  &quot;recall_at_10&quot;: 0.9040000000000002,
+  &quot;topic_fidelity&quot;: 1.0,
+  &quot;query_topic&quot;: &quot;storage&quot;,
+  &quot;top5_topics&quot;: [
+    &quot;storage&quot;,
+    &quot;storage&quot;,
+    &quot;storage&quot;,
+    &quot;storage&quot;,
+    &quot;storage&quot;
+  ],
+  &quot;deleted_docs&quot;: 8,
+  &quot;in_table_hits&quot;: 0,
+  &quot;stale_index_hits&quot;: 8,
+  &quot;cdf_delete_events&quot;: 8
+}</pre></html>

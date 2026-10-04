@@ -1,0 +1,84 @@
+Catalog: SqlCatalog   namespaces: [('lake',)]
+
+Created ('lake', 'llm_events')
+  location:  file://D:\K4-Track02-Day18-NguyenBaChinh-2A202602654-Lakehouse-Lab\_lakehouse\iceberg\nb5\warehouse/lake/llm_events
+  metadata:  00000-46daee24-5cc4-46f6-b8c0-1605d6fd9c20.metadata.json
+  format-v2
+
+Partition spec: [
+  1000: ts_day: day(2)
+]
+
+Note: 'ts_day' is NOT a column you insert. It is derived from ts.
+
+Rows:      5,000
+Snapshots: 10   (one per commit)
+Data files: 10
+
+Files to read, no filter:    10
+Files to read, one-day filter: 1
+→ Pruning ratio: 10×   (target ≥ 5×)
+  rows returned: 500
+
+Hive user who forgets `WHERE dt=...`:  reads 10 files
+Iceberg user filtering on `ts`:        reads 1 files
+
+At 512 MB/file and $5/TB scanned:
+  wasted per query: 4.5 GB  =  $0.022
+  × 10,000 queries/day  =  $220/day
+
+That is the bill for one forgotten predicate. Hidden partitioning removes
+the opportunity to forget.
+
+Tier 1  metadata.json     : 00011-30afed3e-c070-416e-97e8-4d60f22fe2b2.metadata.json
+Tier 2  manifest lists    : 10 (one per snapshot)
+Tier 3  manifest files    : 10
+        data files        : 10
+
+Metadata log entries: 12
+Partitions tracked  : 10
+
+data/        47.3 KB   (10 parquet files)
+metadata/   133.4 KB   (20 avro + 12 json)
+→ metadata is 282.2% of table size
+
+At 10 rows/file this looks absurd. At 512 MB/file it is ~0.1%.
+Small files punish you TWICE: more data files AND more metadata to plan over.
+
+Field IDs before: [(1, 'event_id'), (2, 'ts'), (3, 'model'), (4, 'latency_ms'), (5, 'cost_usd')]
+
+Field IDs after : [(1, 'event_id'), (2, 'ts'), (3, 'model'), (4, 'latency_millis'), (5, 'cost_usd'), (6, 'tier')]
+
+latency_ms → latency_millis kept field_id=4: a rename rewrote NO data.
+Old rows read back with tier=NULL — no backfill, no migration job.
+
+Rows still readable: 5,000
+Columns now: ['event_id', 'ts', 'model', 'latency_millis', 'cost_usd', 'tier']
+tier nulls: 5,000 (all pre-existing rows)
+
+snapshot[0]  4910745859014556458: 500 rows
+
+snapshot[-1] 2928537221921204079: 5,000 rows
+
+Total snapshots retained: 10
+
+History (last 3):
+  2026-10-04 09:09:40.826000  snapshot=3696500692628049311
+  2026-10-04 09:09:40.870000  snapshot=6484695148989886376
+  2026-10-04 09:09:40.922000  snapshot=2928537221921204079
+
+Partition specs in use across data files: [1, 2]
+
+Total rows readable across BOTH specs: 5,500
+
+Two layouts, one table, zero rewrites. This is the feature.
+
+  [PASS] pruning ratio ≥ 5x
+  [PASS] ≥ 10 snapshots
+  [PASS] field_id stable on rename
+  [PASS] ≥ 2 partition specs
+  [PASS] all rows readable
+
+NB5 complete.
+
+SUBMISSION_METRICS_JSON={"catalog": "SqlCatalog", "files_all": 10, "files_one_day": 1, "pruning_ratio": 10.0, "metadata_bytes": 136634, "data_bytes": 48419, "metadata_data_ratio": 2.8219087548276502, "rename_field_id": 4, "specs_in_use": [1, 2], "rows": 5500}

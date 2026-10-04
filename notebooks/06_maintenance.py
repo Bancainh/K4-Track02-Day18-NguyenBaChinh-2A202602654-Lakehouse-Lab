@@ -31,6 +31,7 @@ import _setup  # noqa: F401
 
 import datetime as dtm
 import glob
+import json
 import os
 import time
 from pathlib import Path
@@ -43,6 +44,11 @@ from lakehouse import catalog, count_files, du, human, namespace, path, reset, r
 
 TABLE = path("scratch", "maint_events")
 reset(TABLE)
+
+
+def delta_data_file_count(table_path: str) -> int:
+    """Count physical data files, excluding Parquet transaction checkpoints."""
+    return sum(1 for f in Path(table_path).rglob("*.parquet") if "_delta_log" not in f.parts)
 
 # %% [markdown]
 # ## 0. Manufacture the problem: 200 micro-batches
@@ -209,9 +215,9 @@ for i in range(3):
 
 dt = DeltaTable(TABLE)
 print(f"Rows reported by the table: {dt.count():,}   (orphans are invisible)")
-print(f"Parquet files on disk:      {count_files(TABLE)}")
+print(f"Parquet data files on disk: {delta_data_file_count(TABLE)}")
 print(f"Parquet files in the log:   {len(dt.file_uris())}")
-print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and cannot see")
+print(f"→ {delta_data_file_count(TABLE) - len(dt.file_uris())} unreferenced data files")
 
 # %% [markdown]
 # ### Measured finding: `VACUUM` alone does **not** catch these
@@ -221,7 +227,7 @@ print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and can
 # %%
 still = DeltaTable(TABLE).vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
 print(f"VACUUM dry-run now finds: {len(still)} files")
-print(f"Orphans still on disk:    {count_files(TABLE) - len(DeltaTable(TABLE).file_uris())}")
+print(f"Orphans still on disk:    {delta_data_file_count(TABLE) - len(DeltaTable(TABLE).file_uris())}")
 print("""
 `deltalake` (the Rust/Python implementation used here) reclaims files the
 transaction log has TOMBSTONED. A file that was never committed was never
@@ -260,7 +266,7 @@ for f in found:
     print(f"  {os.path.basename(f)}")
     os.remove(f)
 
-print(f"\nAfter removal — on disk: {count_files(TABLE)}, in log: {len(DeltaTable(TABLE).file_uris())}")
+print(f"\nAfter removal — data files on disk: {delta_data_file_count(TABLE)}, in log: {len(DeltaTable(TABLE).file_uris())}")
 print("\n⚠️ The age guard is not optional. Without it you will delete files that a")
 print("   concurrent writer has written but not yet committed, and corrupt the table.")
 
@@ -276,9 +282,14 @@ json_before = len(list(log_dir.glob("*.json")))
 
 DeltaTable(TABLE).create_checkpoint()
 
-ckpt = list(log_dir.glob("*.checkpoint.parquet"))
+ckpt = sorted(log_dir.glob("*.checkpoint.parquet"), reverse=True)
+checkpoint_info = json.loads((log_dir / "_last_checkpoint").read_text(encoding="utf-8"))
+latest_checkpoint = log_dir / f"{checkpoint_info['version']:020d}.checkpoint.parquet"
+assert latest_checkpoint.exists(), "Latest checkpoint pointer must reference an existing file"
+assert checkpoint_info["version"] == DeltaTable(TABLE).version()
 print(f"JSON log entries a cold reader would replay: {json_before}")
-print(f"Checkpoint written: {ckpt[0].name if ckpt else 'NONE'}")
+print(f"Checkpoint written: {latest_checkpoint.name}")
+print("Latest checkpoint metadata:", checkpoint_info)
 print(f"_last_checkpoint present: {(log_dir / '_last_checkpoint').exists()}")
 print("\nA reader now loads 1 checkpoint + the few JSONs after it, not all 200.")
 print("For CDC/streaming tables this is the difference between a 200 ms and a")

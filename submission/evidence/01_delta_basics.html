@@ -1,0 +1,40 @@
+<!doctype html><html lang='vi'><meta charset='utf-8'><title>01_delta_basics</title><style>body{font:16px 'Segoe UI',sans-serif;max-width:1200px;margin:24px auto;color:#172b4d}h1{font-size:25px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px Consolas,monospace;background:#f4f7fb;padding:16px;border-left:4px solid #2472a4}small{color:#465872}</style><h1>01_delta_basics — bằng chứng thực thi</h1><p>Nguyễn Bá Chính · 2A202602654 · 2026-10-04T16:09:07+07:00</p><small>Ảnh chụp trang render output từ notebook đã thực thi; xem toàn bộ cell/output trong .ipynb.</small><pre>BLOCKED by schema enforcement (expected): Exception: Cast error: Cannot cast string &#x27;thirty&#x27; to value of Int64 type
+</pre><pre>Transaction log files: [&#x27;00000000000000000000.json&#x27;, &#x27;00000000000000000001.json&#x27;]
+First commit JSON (actual file content):
+{&quot;commitInfo&quot;:{&quot;timestamp&quot;:1791104949741,&quot;operation&quot;:&quot;WRITE&quot;,&quot;operationParameters&quot;:{&quot;mode&quot;:&quot;Overwrite&quot;},&quot;engineInfo&quot;:&quot;delta-rs:py-1.6.6&quot;,&quot;operationMetrics&quot;:{&quot;num_added_files&quot;:1,&quot;num_removed_files&quot;:0,&quot;num_partitions&quot;:0,&quot;num_added_rows&quot;:3,&quot;execution_time_ms&quot;:4,&quot;num_retries&quot;:0},&quot;clientVersion&quot;:&quot;delta-rs.py-1.6.6&quot;}}
+{&quot;protocol&quot;:{&quot;minReaderVersion&quot;:1,&quot;minWriterVersion&quot;:2}}
+{&quot;metaData&quot;:{&quot;id&quot;:&quot;b73f159d-deb8-40cc-b0c6-f28fbccd2076&quot;,&quot;name&quot;:null,&quot;description&quot;:null,&quot;format&quot;:{&quot;provider&quot;:&quot;parquet&quot;,&quot;options&quot;:{}},&quot;schemaString&quot;:&quot;{\&quot;type\&quot;:\&quot;struct\&quot;,\&quot;fields\&quot;:[{\&quot;name\&quot;:\&quot;id\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;name\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;age\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;city\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}}]}&quot;,&quot;partitionColumns&quot;:[],&quot;createdTime&quot;:1791104949737,&quot;configuration&quot;:{}}}
+{&quot;add&quot;:{&quot;path&quot;:&quot;part-00000-f40327a3-15e8-4e1f-9216-1724fdf5b47b-c000.snappy.parquet&quot;,&quot;partitionValues&quot;:{},&quot;size&quot;:1384,&quot;modificationTime&quot;:1791104949741,&quot;dataChange&quot;:true,&quot;stats&quot;:&quot;{\&quot;numRecords\&quot;:3,\&quot;minValues\&quot;:{\&quot;city\&quot;:\&quot;Danang\&quot;,\&quot;name\&quot;:\&quot;alice\&quot;,\&quot;age\&quot;:25,\&quot;id\&quot;:1},\&quot;maxValues\&quot;:{\&quot;city\&quot;:\&quot;Hanoi\&quot;,\&quot;id\&quot;:3,\&quot;age\&quot;:35,\&quot;name\&quot;:\&quot;charlie\&quot;},\&quot;nullCount\&quot;:{\&quot;name\&quot;:0,\&quot;id\&quot;:0,\&quot;city\&quot;:0,\&quot;age\&quot;:0}}&quot;,&quot;tags&quot;:null,&quot;baseRowId&quot;:null,&quot;defaultRowCommitVersion&quot;:null,&quot;clusteringProvider&quot;:null}}
+  [PASS] _delta_log/ has JSON commits
+  [PASS] schema enforcement blocked bad write
+  [PASS] tier column added via schema_mode=merge
+  [PASS] duckdb sees 2 tier groups
+
+NB1 complete.
+</pre><pre>Measured metrics (live kernel):
+{
+  &quot;log_files&quot;: [
+    &quot;00000000000000000000.json&quot;,
+    &quot;00000000000000000001.json&quot;
+  ],
+  &quot;schema_blocked&quot;: true,
+  &quot;table_version&quot;: 1,
+  &quot;rows&quot;: 4,
+  &quot;columns&quot;: [
+    &quot;id&quot;,
+    &quot;name&quot;,
+    &quot;age&quot;,
+    &quot;city&quot;,
+    &quot;tier&quot;
+  ],
+  &quot;tier_groups&quot;: [
+    [
+      &quot;premium&quot;,
+      1
+    ],
+    [
+      null,
+      3
+    ]
+  ]
+}</pre></html>

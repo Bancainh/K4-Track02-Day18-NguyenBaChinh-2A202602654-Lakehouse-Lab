@@ -1,0 +1,25 @@
+<!doctype html><html lang='vi'><meta charset='utf-8'><title>05_iceberg_catalog</title><style>body{font:16px 'Segoe UI',sans-serif;max-width:1200px;margin:24px auto;color:#172b4d}h1{font-size:25px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px Consolas,monospace;background:#f4f7fb;padding:16px;border-left:4px solid #2472a4}small{color:#465872}</style><h1>05_iceberg_catalog — bằng chứng thực thi</h1><p>Nguyễn Bá Chính · 2A202602654 · 2026-10-04T16:09:07+07:00</p><small>Ảnh chụp trang render output từ notebook đã thực thi; xem toàn bộ cell/output trong .ipynb.</small><pre>Catalog: SqlCatalog   namespaces: [(&#x27;lake&#x27;,)]
+</pre><pre>Files to read, no filter:    10
+Files to read, one-day filter: 1
+→ Pruning ratio: 10×   (target ≥ 5×)
+  rows returned: 500
+</pre><pre>Field IDs after : [(1, &#x27;event_id&#x27;), (2, &#x27;ts&#x27;), (3, &#x27;model&#x27;), (4, &#x27;latency_millis&#x27;), (5, &#x27;cost_usd&#x27;), (6, &#x27;tier&#x27;)]
+
+latency_ms → latency_millis kept field_id=4: a rename rewrote NO data.
+Old rows read back with tier=NULL — no backfill, no migration job.
+</pre><pre>Partition specs in use across data files: [1, 2]</pre><pre>Measured metrics (live kernel):
+{
+  &quot;catalog&quot;: &quot;SqlCatalog&quot;,
+  &quot;files_all&quot;: 10,
+  &quot;files_one_day&quot;: 1,
+  &quot;pruning_ratio&quot;: 10.0,
+  &quot;metadata_bytes&quot;: 136634,
+  &quot;data_bytes&quot;: 48419,
+  &quot;metadata_data_ratio&quot;: 2.8219087548276502,
+  &quot;rename_field_id&quot;: 4,
+  &quot;specs_in_use&quot;: [
+    1,
+    2
+  ],
+  &quot;rows&quot;: 5500
+}</pre></html>

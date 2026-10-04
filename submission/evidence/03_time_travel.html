@@ -1,0 +1,39 @@
+<!doctype html><html lang='vi'><meta charset='utf-8'><title>03_time_travel</title><style>body{font:16px 'Segoe UI',sans-serif;max-width:1200px;margin:24px auto;color:#172b4d}h1{font-size:25px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px Consolas,monospace;background:#f4f7fb;padding:16px;border-left:4px solid #2472a4}small{color:#465872}</style><h1>03_time_travel — bằng chứng thực thi</h1><p>Nguyễn Bá Chính · 2A202602654 · 2026-10-04T16:09:07+07:00</p><small>Ảnh chụp trang render output từ notebook đã thực thi; xem toàn bộ cell/output trong .ipynb.</small><pre>MERGE 100K rows: 0.10s
+</pre><pre>RESTORE → v2: 0.02s   (target &lt; 30s)
+Rows with score&lt;0 after restore: 0  (expected 0)
+</pre><pre>  v 4  RESTORE                  
+  v 3  WRITE                    
+  v 2  MERGE                    
+  v 1  WRITE                    
+  v 0  WRITE                    
+
+Total versions: 5  (target ≥ 5)
+</pre><pre>Measured metrics (live kernel):
+{
+  &quot;merge_input_rows&quot;: 100000,
+  &quot;restored_rows&quot;: 150000,
+  &quot;versions&quot;: [
+    {
+      &quot;version&quot;: 4,
+      &quot;operation&quot;: &quot;RESTORE&quot;
+    },
+    {
+      &quot;version&quot;: 3,
+      &quot;operation&quot;: &quot;WRITE&quot;
+    },
+    {
+      &quot;version&quot;: 2,
+      &quot;operation&quot;: &quot;MERGE&quot;
+    },
+    {
+      &quot;version&quot;: 1,
+      &quot;operation&quot;: &quot;WRITE&quot;
+    },
+    {
+      &quot;version&quot;: 0,
+      &quot;operation&quot;: &quot;WRITE&quot;
+    }
+  ],
+  &quot;bad_rows_after_restore&quot;: 0,
+  &quot;original_rows&quot;: 100000
+}</pre></html>

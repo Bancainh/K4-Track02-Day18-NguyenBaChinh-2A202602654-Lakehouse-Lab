@@ -1,5 +1,7 @@
 # K4-Track02-Day18-Lakehouse-Lab
 
+> Bài nộp cá nhân **Nguyễn Bá Chính — 2A202602654**: [thông tin và cách tái lập](submission/INFO.md), [kết quả và bằng chứng](submission/RESULTS.md), [reflection](submission/REFLECTION.md), [khai báo AI](submission/AI_USAGE.md).
+
 Lab cho **Khóa 4 · Track 02 · Day 18 · Data Lakehouse Architecture**.
 
 **Hình thức làm bài: cá nhân cho cả phần bắt buộc và bonus.** Mỗi học viên tự chạy,
